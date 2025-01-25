@@ -73,11 +73,6 @@ export const useRoleAccess = () => {
         return userRoles;
       } catch (error: any) {
         console.error('[RoleAccess] Role fetch error:', error);
-        toast({
-          title: "Error fetching roles",
-          description: "There was a problem loading your permissions. Please try again.",
-          variant: "destructive",
-        });
         setError(error);
         throw error;
       } finally {
@@ -86,11 +81,22 @@ export const useRoleAccess = () => {
     },
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    gcTime: 1000 * 60 * 5,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchInterval: 5000 // Poll every 5 seconds
+    refetchInterval: 5000, // Poll every 5 seconds
+    meta: {
+      errorMessage: 'Failed to load user roles',
+      onError: (error: Error) => {
+        console.error('[RoleAccess] Role loading error:', error);
+        toast({
+          title: "Error loading roles",
+          description: "There was a problem loading your permissions. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
   });
 
   return {

@@ -22,6 +22,7 @@ const ProtectedRoutes = ({ session }: ProtectedRoutesProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [hasShownAccessDenied, setHasShownAccessDenied] = useState(false);
 
   // Convert path to tab
   const pathToTab = (path: string) => {
@@ -37,23 +38,36 @@ const ProtectedRoutes = ({ session }: ProtectedRoutesProps) => {
       path: location.pathname,
       newTab,
       canAccess: canAccessTab(newTab, userRoles),
-      userRole
+      userRole,
+      isLoading: roleLoading
     });
     
-    if (!canAccessTab(newTab, userRoles)) {
+    // Only check access after roles are loaded
+    if (!roleLoading && !isInitialLoad && userRoles && !canAccessTab(newTab, userRoles)) {
       console.log('User cannot access tab:', newTab);
       const defaultRoute = getDefaultRoute(userRoles);
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to access this section.",
-        variant: "destructive",
-      });
+      
+      // Only show toast if we haven't shown one yet
+      if (!hasShownAccessDenied) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to access this section.",
+          variant: "destructive",
+        });
+        setHasShownAccessDenied(true);
+      }
+      
       navigate(defaultRoute);
       return;
     }
     
     setActiveTab(newTab);
-  }, [location.pathname, navigate, userRoles, userRole, toast]);
+  }, [location.pathname, navigate, userRoles, userRole, toast, roleLoading, isInitialLoad, hasShownAccessDenied]);
+
+  // Reset hasShownAccessDenied when roles change
+  useEffect(() => {
+    setHasShownAccessDenied(false);
+  }, [userRoles]);
 
   useEffect(() => {
     let mounted = true;
@@ -110,7 +124,7 @@ const ProtectedRoutes = ({ session }: ProtectedRoutesProps) => {
     };
   }, [navigate, session, syncRoles, userRole, toast]);
 
-  // Show loading state during initial auth check
+  // Show loading state during initial auth check or role loading
   if (isAuthChecking || (isInitialLoad && roleLoading)) {
     console.log('Showing loading state:', {
       isInitialLoad,
@@ -131,9 +145,9 @@ const ProtectedRoutes = ({ session }: ProtectedRoutesProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  // If user has no access to current route, redirect to default route
+  // Only check route access after roles are loaded
   const currentTab = pathToTab(location.pathname);
-  if (!canAccessTab(currentTab, userRoles)) {
+  if (!roleLoading && !isInitialLoad && userRoles && !canAccessTab(currentTab, userRoles)) {
     const defaultRoute = getDefaultRoute(userRoles);
     return <Navigate to={defaultRoute} replace />;
   }
@@ -144,12 +158,16 @@ const ProtectedRoutes = ({ session }: ProtectedRoutesProps) => {
       isSidebarOpen={isSidebarOpen}
       onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
       onTabChange={(tab) => {
-        if (!canAccessTab(tab, userRoles)) {
-          toast({
-            title: "Access Denied",
-            description: "You don't have permission to access this section.",
-            variant: "destructive",
-          });
+        // Only check access after roles are loaded
+        if (!roleLoading && userRoles && !canAccessTab(tab, userRoles)) {
+          if (!hasShownAccessDenied) {
+            toast({
+              title: "Access Denied",
+              description: "You don't have permission to access this section.",
+              variant: "destructive",
+            });
+            setHasShownAccessDenied(true);
+          }
           return;
         }
         const path = tab === 'dashboard' ? '/' : `/${tab}`;
