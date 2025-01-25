@@ -6,7 +6,8 @@ import UserManual from "./documentation/UserManual";
 import AnnouncementsManager from "./system/AnnouncementsManager";
 import LegalDocumentsView from "./system/LegalDocumentsView";
 import EmailManagementCard from "./system/email/EmailManagementCard";
-import { Route, GitBranch, UserCog, Book, Bell, FileText, Mail } from "lucide-react";
+import SystemAuditView from "./system/audit/SystemAuditView";
+import { Route, GitBranch, UserCog, Book, Bell, FileText, Mail, ClipboardList } from "lucide-react";
 
 const SystemToolsView = () => {
   return (
@@ -17,7 +18,7 @@ const SystemToolsView = () => {
       </header>
 
       <DashboardTabs defaultValue="health" className="space-y-4">
-        <DashboardTabsList className="w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-0 bg-dashboard-card p-1 rounded-lg overflow-x-auto scrollbar-none">
+        <DashboardTabsList className="w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-8 gap-0 bg-dashboard-card p-1 rounded-lg overflow-x-auto scrollbar-none">
           <DashboardTabsTrigger value="health" className="min-w-[120px]">
             <Route className="w-4 h-4 mr-2" />
             System Health
@@ -45,6 +46,10 @@ const SystemToolsView = () => {
           <DashboardTabsTrigger value="email" className="min-w-[120px]">
             <Mail className="w-4 h-4 mr-2" />
             Email Management
+          </DashboardTabsTrigger>
+          <DashboardTabsTrigger value="audit" className="min-w-[120px]">
+            <ClipboardList className="w-4 h-4 mr-2" />
+            Audit & Logs
           </DashboardTabsTrigger>
         </DashboardTabsList>
 
@@ -74,6 +79,10 @@ const SystemToolsView = () => {
 
         <DashboardTabsContent value="email" className="space-y-4">
           <EmailManagementCard />
+        </DashboardTabsContent>
+
+        <DashboardTabsContent value="audit" className="space-y-4">
+          <SystemAuditView />
         </DashboardTabsContent>
       </DashboardTabs>
     </div>
